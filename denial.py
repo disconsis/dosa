@@ -81,7 +81,7 @@ class IPAddress:
     # TODO
     def check_poison(self):
         # TODO: assert promisc mode
-        sniff(filter=)
+        raise NotImplementedError
 
 class IPMultiple:
     def __init__(self, addrs):
