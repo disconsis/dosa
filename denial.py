@@ -208,8 +208,3 @@ class Denier:
             func=self.poison_runner,
             iterable=
         )
-
-# TODO: find promisc hosts on subnet who might be watching the dos attempt
-# TODO: os fingerprinting
-# TODO: better oui list (use wiresharks?)
-# TODO: tui interface
