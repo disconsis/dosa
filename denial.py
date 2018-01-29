@@ -58,7 +58,7 @@ class IPAddress:
         if self.mac is None:
             self.resolve_mac()
         if self.mac == 'ff:ff:ff:ff:ff:ff':
-            self.vendor =  ''
+            self.vendor = ''
             return
 
         db = sqlite3.connect('oui.db')
@@ -189,7 +189,8 @@ class Denier:
 
         thread_runner(
             func=self.restore_runner,
-            iterable=filter(lambda addr: addr.poisoned, self.target.active_addrs)
+            iterable=filter(lambda addr: addr.poisoned,
+                            self.target.active_addrs)
         )
 
     def poison(self):
