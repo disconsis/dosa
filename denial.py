@@ -154,7 +154,7 @@ class IPAddress:
 
             stop_event = threading.Event()
 
-            if self.mac is None:
+            if self.mac in ('ff:ff:ff:ff:ff:ff', None):
                 try:
                     self.resolve_mac(bcast_if_fail=False)
                 except self.AddressResolutionFailedError:
@@ -178,8 +178,10 @@ class IPAddress:
                 lfilter=from_self,
                 prn=check,
                 stop_filter=lambda p: stop_event.is_set(),
+                timeout=timeout,
                 store=False
             )
+            complete_event.set()  # signal monitoring has ended
 
             def from_self(pkt):
                 """return True if packet originates from this address"""
@@ -198,12 +200,14 @@ class IPAddress:
 
                 def check_runner(self, pkt, spoof_host, spoofed_mac,
                                  trusted_store, timeout, complete_event,
-                                 stop_event=None):
+                                 stop_event):
                     """For running the checking procedure in a thread.
 
-                    :param stop_event: Set on success (if not None) to signal
-                    the end of monitoring
-                    :type stop_event: threading.Event or None
+                    :param stop_event: Set on success if spoof_host is not
+                    None to signal the end of monitoring. If spoof_host is
+                    None, monitoring should continue till the end of timeout,
+                    so stop_event is ignored.
+                    :type stop_event: threading.Event
                     """
                     if spoof_host is not None:
                         # only check for spoof_host destined packets
