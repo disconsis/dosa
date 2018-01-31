@@ -4,9 +4,7 @@ from scapy.all import *
 import ipaddress
 from time import sleep
 import threading
-from os import _exit
-from sys import exit
-import sqlite3
+import netaddr
 
 conf.verb = 0
 
@@ -26,6 +24,23 @@ def thread_runner(func, iterable):
         thread.join()
 
 
+class MAC(netaddr.EUI):
+    broadcast = netaddr.EUI('ff:ff:ff:ff:ff:ff')
+
+    def __init__(self, addr):
+        if addr is None:
+            # scapy considers None and broadcast MAC addr to be the same
+            # set to broadcast for consistency
+            addr = self.broadcast
+        super().__init__(addr, version=48, dialect=netaddr.mac_unix_expanded)
+        try:
+            self.vendor = ' | '.join(
+                self.oui.registration(i).org for i in range(self.oui.reg_count)
+            )
+        except netaddr.core.NotRegisteredError:
+            self.vendor = None
+
+
 class IPAddress:
     arp_timeout = 15
 
@@ -35,7 +50,6 @@ class IPAddress:
     def __init__(self, ip):
         self.ip = ipaddress.IPv4Address(ip)
         self.mac = None
-        self.vendor = None
         self.poisoned_arp = dict()
         self.active = None
 
@@ -47,27 +61,13 @@ class IPAddress:
         )
         if resp is None:
             if bcast_if_fail:
-                self.mac = 'ff:ff:ff:ff:ff:ff'
+                self.mac = MAC.broadcast
             else:
                 raise self.AddressResolutionFailedError(
                     "failed to resolve {}".format(self.ip)
                 )
         else:
-            self.mac = resp.hwsrc
-
-    def resolve_vendor(self):
-        if self.mac is None:
-            self.resolve_mac()
-        if self.mac == 'ff:ff:ff:ff:ff:ff':
-            self.vendor = ''
-            return
-
-        db = sqlite3.connect('oui.db')
-        vendor = db.execute(
-            'select vendor from macvendors where mac=?',
-            (self.mac.replace(':', '')[:6].upper(),)
-        ).fetchone()[0].strip()
-        self.vendor = vendor if vendor is not None else ''
+            self.mac = MAC(resp.hwsrc)
 
     def check_live(self):
         # TODO?: check if multiple replies
@@ -115,7 +115,7 @@ class IPAddress:
         :param spoofed_mac: Fake mac entry for spoof_host to check for in this
         host's ARP cache. If set to None, check for any spoofed mac for
         spoof_host. Ignored if spoof_host is None.
-        :type spoofed_mac: str or None
+        :type spoofed_mac: MAC or None
 
         :param trusted_store: If spoofed_mac is None, get trusted mac addresses
         from this store (which is an IPMultiple instance). Will be updated if
@@ -154,7 +154,7 @@ class IPAddress:
 
             stop_event = threading.Event()
 
-            if self.mac in ('ff:ff:ff:ff:ff:ff', None):
+            if self.mac in (MAC.broadcast, None):
                 try:
                     self.resolve_mac(bcast_if_fail=False)
                 except self.AddressResolutionFailedError:
@@ -223,7 +223,7 @@ class IPAddress:
                                     addr for addr in trusted_store.addrs
                                     if addr.ip == spoof_host
                                 )
-                                if trusted_addr.mac == 'ff:ff:ff:ff:ff:ff':
+                                if trusted_addr.mac == MAC.broadcast:
                                     trusted_store.remove(trusted_addr)
                                     raise StopIteration
 
@@ -257,7 +257,7 @@ class IPAddress:
                                 addr for addr in trusted_store.addrs
                                 if addr.ip == dst_host
                             )
-                            if trusted_addr.mac == 'ff:ff:ff:ff:ff:ff':
+                            if trusted_addr.mac == MAC.broadcast:
                                 trusted_store.remove(trusted_addr)
                                 raise StopIteration
 
@@ -288,12 +288,6 @@ class IPMultiple:
         thread_runner(
             func=IPAddress.resolve_mac,
             iterable=self.addrs,
-        )
-
-    def resolve_vendor(self):
-        thread_runner(
-            func=IPAddress.resolve_vendor,
-            iterable=self.addrs
         )
 
     def check_live(self):
@@ -340,7 +334,7 @@ class IPNetwork(IPMultiple):
 class Denier:
     interval = 1
     restore_count = 1000
-    spoof_mac = 'de:ad:be:ef:13:37'
+    spoof_mac = MAC('de:ad:be:ef:13:37')
 
     class TargetInactiveException(ValueError):
         pass
