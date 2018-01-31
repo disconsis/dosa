@@ -56,7 +56,7 @@ class IPAddress:
     def resolve_mac(self, bcast_if_fail=True):
         # TODO: detect multiple replies (for ARP poisoning attempts)
         resp = sr1(
-            Ether()/ARP(pdst=self.ip),
+            Ether() / ARP(pdst=self.ip),
             timeout=self.arp_timeout
         )
         if resp is None:
