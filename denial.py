@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 
 from scapy.all import *
-import ipaddress
 import threading
 import netaddr
 import functools
+import fcntl
+import struct
+import socket
 
 conf.verb = 0
 
@@ -48,7 +50,7 @@ class IPAddress:
         pass
 
     def __init__(self, ip):
-        self.ip = ipaddress.IPv4Address(ip)
+        self.ip = netaddr.IPAddress(ip)
         self.mac = None
         self.poisoned_arp = dict()
         self.active = None
@@ -334,8 +336,8 @@ class IPMultiple:
 
 class IPNetwork(IPMultiple):
     def __init__(self, network, _except=None):
-        self.network = ipaddress.IPv4Network(network)
-        super().__init__(self.network.hosts())
+        self.network = netaddr.IPNetwork(network)
+        super().__init__(self.network.iter_hosts())
 
         if _except is not None:
             if isinstance(_except, (tuple, list, set)):
@@ -362,6 +364,8 @@ class Denier:
         conf.iface = iface
         self.gateway = IPAddress(gateway)
         self.gateway.resolve_mac(bcast_if_fail=False)
+        # find our own addr
+        self.resolve_host()
 
         if '/' in target:
             self.target_type = 'network'
@@ -372,6 +376,37 @@ class Denier:
         else:
             self.target_type = 'single'
             self.target = IPMultiple([target])
+
+    def resolve_host(self):
+        sock = socket.socket()
+
+        # TODO?: change buffer length? (for amazingly long iface names)
+        iface = struct.pack('256s', self.iface.encode())
+
+        # ioctl is platform dependent
+        # TODO: find a platform independent solution. low hopes though.
+        # 0x8915 -> SIOCGIFADDR: get the addr of the device
+        ip = socket.inet_ntoa(
+            fcntl.ioctl(sock.fileno(), 0x8915, iface)[20:24]
+        )
+
+        self.host = IPAddress(ip)
+        self.host.active = True
+
+        # 0x8927 -> SIOCGIFHWADDR
+        mac_bytes = fcntl.ioctl(sock.fileno(), 0x8927, iface)[18:24]
+        self.host.mac = MAC(':'.join(hex(c) for c in mac_bytes))
+
+        # 0x891b -> SIOCGIFNETMASK
+        netmask = IPAddress(
+            socket.inet_ntoa(
+                fcntl.ioctl(sock.fileno(), 0x891b, iface)[20:24]
+            )
+        )
+
+        network_addr = IPAddress(self.host.ip.value & netmask.value)
+        self.subnet = IPNetwork('/'.join(str(network_addr),
+                                         str(netmask)))
 
     def find_active(self):
         self.target.check_live()
