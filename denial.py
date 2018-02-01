@@ -93,7 +93,7 @@ class IPAddress:
             self.resolve_mac()
         reply = srp1(
             Ether(dst=self.mac) / ARP(pdst=self.ip),
-            timeout=arp_timeout
+            timeout=self.arp_timeout
         )
         self.active = reply is not None
 
@@ -193,8 +193,8 @@ class IPAddress:
                 spoof_host.resolve_mac()
 
             sniff(
-                lfilter=from_self,
-                prn=check,
+                lfilter=self.from_self,
+                prn=self.check,
                 stop_filter=lambda p: stop_event.is_set(),
                 timeout=timeout,
                 store=False
@@ -210,7 +210,7 @@ class IPAddress:
             def check(pkt):
                 """check packets for evidence of ARP cache poisoning"""
                 threading.Thread(
-                    target=check_runner,
+                    target=self.check_runner,
                     args=(self, pkt, spoof_host, spoofed_mac, trusted_store,
                           timeout, complete_event, stop_event),
                     name='check_runner-{}'.format(pkt[IP].dst)
