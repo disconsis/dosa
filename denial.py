@@ -4,6 +4,7 @@ from scapy.all import *
 import ipaddress
 import threading
 import netaddr
+import functools
 
 conf.verb = 0
 
@@ -68,8 +69,24 @@ class IPAddress:
         else:
             self.mac = MAC(resp.hwsrc)
 
-    def check_live(self):
+            if resp[Ether].src == resp[ARP].hwsrc:
+                # if ARP reply comes from the host itself, ie, not a proxy arp
+                # then the host must be alive
+                self.active = True
+
+    def check_live(self, refresh=False):
+        """Check if host is active. If self.active is already calculated,
+        and refresh is False, don't do anything. Otherwise, send an ARP
+        request and check for a response.
+
+        :param refresh: whether to refresh the active status
+        :type refresh: bool
+        """
         # TODO?: check if multiple replies
+        if refresh is False and self.active is not None:
+            # already calculated
+            return
+
         if self.mac is None:
             self.resolve_mac()
         reply = srp1(
@@ -289,9 +306,9 @@ class IPMultiple:
             iterable=self.addrs,
         )
 
-    def check_live(self):
+    def check_live(self, refresh=False):
         thread_runner(
-            func=IPAddress.check_live,
+            func=functools.partial(IPAddress.check_live, refresh=refresh),
             iterable=self.addrs
         )
         self.active_addrs = set(filter(lambda addr: addr.active, self.addrs))
