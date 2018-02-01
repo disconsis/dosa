@@ -2,7 +2,6 @@
 
 from scapy.all import *
 import ipaddress
-from time import sleep
 import threading
 import netaddr
 
