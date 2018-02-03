@@ -340,7 +340,7 @@ class IPNetwork(IPMultiple):
         super().__init__(self.network.iter_hosts())
 
         if _except is not None:
-            if isinstance(_except, (tuple, list, set)):
+            if hasattr(_except, '__iter__') and not isinstance(_except, str):
                 self._except = set(map(IPAddress, _except))
             else:
                 self._except = {IPAddress(_except)}
@@ -370,7 +370,7 @@ class Denier:
         if '/' in target:
             self.target_type = 'network'
             self.target = IPNetwork(target)
-        elif isinstance(target, (tuple, list, set)):
+        elif hasattr(target, '__iter__') and not isinstance(target, str):
             self.target_type = 'multiple'
             self.target = IPMultiple(target)
         else:
