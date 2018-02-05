@@ -28,3 +28,10 @@ def test_host_takes_optional_mac_argument_and_sets_mac_attr_as_eui_object():
     assert utils.Host('1.1.1.1', mac='ab:cd:ef:12:34:56').mac \
         == netaddr.EUI('ab:cd:ef:12:34:56')
     assert utils.Host('1.1.1.1').mac is None
+
+
+def test_host_has_vendor_attribute_and_is_correctly_set():
+    assert utils.Host('1.2.3.4', mac='b4:99:ba:00:00:00').vendor \
+        == 'Hewlett Packard'
+    assert utils.Host('1.2.3.4', mac='00:50:ba:00:00:00').vendor \
+        == 'D-Link Corporation'
