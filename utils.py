@@ -12,8 +12,8 @@ class MAC(netaddr.EUI):
     broadcast = netaddr.EUI('ff:ff:ff:ff:ff:ff',
                             dialect=netaddr.mac_unix_expanded)
 
-    def __init__(self):
-        pass
+    def __init__(self, mac):
+        super().__init__(mac, dialect=netaddr.mac_unix_expanded)
 
 
 class Host:
