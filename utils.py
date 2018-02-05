@@ -31,8 +31,12 @@ class Host:
         resolve_os()
     """
 
-    def __init__(self):
-        pass
+    def __init__(self, ip, mac=None):
+        self.ip = netaddr.IPAddress(ip)
+        if mac is None:
+            self.mac = None
+        else:
+            self.mac = netaddr.EUI(mac)
 
     def resolve_mac(self):
         pass
