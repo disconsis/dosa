@@ -9,6 +9,9 @@ class MAC(netaddr.EUI):
         mac
     """
 
+    broadcast = netaddr.EUI('ff:ff:ff:ff:ff:ff',
+                            dialect=netaddr.mac_unix_expanded)
+
     def __init__(self):
         pass
 
