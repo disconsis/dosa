@@ -32,7 +32,7 @@ def test_host_takes_optional_mac_argument_and_sets_mac_attr_as_eui_object():
         == netaddr.EUI('12:34:56:78:9a:bc')
     assert utils.Host('1.1.1.1', mac='ab:cd:ef:12:34:56').mac \
         == netaddr.EUI('ab:cd:ef:12:34:56')
-    assert utils.Host('1.1.1.1').mac is None
+    assert utils.Host('1.1.1.1').mac is utils.MAC.broadcast
 
 
 def test_host_default_mac_returns_correct_bool():
