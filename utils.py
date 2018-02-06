@@ -40,6 +40,15 @@ class Host:
         else:
             self.mac = MAC(mac)
 
+    @property
+    def vendor(self):
+        if not self.mac:
+            return None
+        return ' | '.join(
+            self.mac.oui.registration(i).org.title()
+            for i in range(self.mac.oui.reg_count)
+        )
+
     def resolve_mac(self):
         pass
 
