@@ -39,7 +39,7 @@ class Host:
         if mac is None:
             self.mac = MAC.broadcast
         else:
-            self.mac = netaddr.EUI(mac)
+            self.mac = MAC(mac)
 
     def resolve_mac(self):
         pass
