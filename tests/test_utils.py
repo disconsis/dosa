@@ -17,6 +17,11 @@ def test_mac_has_valid_str_representation():
     assert str(utils.MAC('12:34:56:78:9a:bc')) == '12:34:56:78:9a:bc'
 
 
+def test_mac_returns_correct_bool():
+    assert bool(utils.MAC('ff:ff:ff:ff:ff:ff')) is False
+    assert bool(utils.MAC('12:34:56:78:9a:bc')) is True
+
+
 def test_host_takes_argument_ip_and_sets_ip_attr_as_netaddr_ipaddress_object():
     assert utils.Host('1.2.3.4').ip == netaddr.IPAddress('1.2.3.4')
     assert utils.Host('23.22.11.58').ip == netaddr.IPAddress('23.22.11.58')
