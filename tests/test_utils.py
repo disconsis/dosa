@@ -35,6 +35,12 @@ def test_host_takes_optional_mac_argument_and_sets_mac_attr_as_eui_object():
     assert utils.Host('1.1.1.1').mac is None
 
 
+def test_host_default_mac_returns_correct_bool():
+    assert bool(utils.Host('1.2.3.4', mac='12:34:56:78:9a:bc').mac) is True
+    assert bool(utils.Host('1.2.3.4', mac='ff:ff:ff:ff:ff:ff').mac) is False
+    assert bool(utils.Host('1.2.3.4').mac) is False
+
+
 def test_host_has_vendor_attribute_and_is_correctly_set():
     assert utils.Host('1.2.3.4', mac='b4:99:ba:00:00:00').vendor \
         == 'Hewlett Packard'
