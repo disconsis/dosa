@@ -9,14 +9,13 @@ class MAC(netaddr.EUI):
         mac
     """
 
-    broadcast = netaddr.EUI('ff:ff:ff:ff:ff:ff',
-                            dialect=netaddr.mac_unix_expanded)
-
     def __init__(self, mac):
         super().__init__(mac, dialect=netaddr.mac_unix_expanded)
 
     def __bool__(self):
         return self != self.broadcast
+
+MAC.broadcast = MAC('ff:ff:ff:ff:ff:ff')
 
 
 class Host:
