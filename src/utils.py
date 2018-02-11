@@ -5,7 +5,7 @@ from scapy.config import conf
 from scapy import route
 
 
-class AddressNotResolvedException(Exception):
+class AddressNotResolvedError(Exception):
     pass
 
 
@@ -14,7 +14,6 @@ class MAC(netaddr.EUI):
 
     attributes:
         broadcast
-        mac
     """
 
     def __init__(self, mac):
@@ -76,11 +75,11 @@ class Host:
             iface=conf.iface,
         )
         if resp is None:
-            raise AddressNotResolvedException(
+            raise AddressNotResolvedError(
                 'failed to resolve {}'.format(self.ip)
             )
         else:
             self.mac = MAC(resp[ARP].hwsrc)
 
     def resolve_os(self):
-        pass
+        raise NotImplementedError

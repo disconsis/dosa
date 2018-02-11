@@ -64,5 +64,5 @@ def test_host_raises_exception_on_no_response():
     host = utils.Host('172.18.0.10')
     host.arp_timeout = 1
     host.arp_retries = 0
-    with pytest.raises(utils.AddressNotResolvedException) as e:
+    with pytest.raises(utils.AddressNotResolvedError) as e:
         host.resolve_mac()
