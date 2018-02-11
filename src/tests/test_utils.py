@@ -1,5 +1,7 @@
 import utils
 import netaddr
+from scapy.config import conf
+import pytest
 
 
 def test_mac_has_broadcast_addr():
@@ -46,3 +48,21 @@ def test_host_has_vendor_attribute_and_is_correctly_set():
         == 'Hewlett Packard'
     assert utils.Host('1.2.3.4', mac='00:50:ba:00:00:00').vendor \
         == 'D-Link Corporation'
+
+# set_up and tear_down methods required for setting up docker beforehand
+# move the below into a class
+
+def test_host_resolves_correct_mac():
+    conf.iface = 'docker0'
+    host = utils.Host('172.18.0.2')
+    host.resolve_mac()
+    assert host.mac == netaddr.EUI('02:42:ac:12:00:02')
+
+
+def test_host_raises_exception_on_no_response():
+    conf.iface = 'docker0'
+    host = utils.Host('172.18.0.10')
+    host.arp_timeout = 1
+    host.arp_retries = 0
+    with pytest.raises(utils.AddressNotResolvedException) as e:
+        host.resolve_mac()
