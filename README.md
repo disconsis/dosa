@@ -21,12 +21,13 @@ In case of Debian 8 download and install following packages:
 
 vagrant: 
 -  https://releases.hashicorp.com/vagrant/2.0.2/vagrant_2.0.2_i686.deb
+
 virtualbox: 
 - https://download.virtualbox.org/virtualbox/4.3.40/VirtualBox-4.3.40-110317-Linux_x86.run
 
 Those are used to provide virtual image ready for testing and development.
 
-In order to start just run:
+In order to start just run following command:
 `vagrant up`
 
 Then connect into virtual machine:
@@ -34,6 +35,5 @@ Then connect into virtual machine:
 
 When connected to system please note that `/vagrant` partition
 is mounted to host system at same folder where `vagrant up` went up,
-so development in your favourite IDE is still possible.
-
-In order to test just go to '/vagrant' and all dosa files are there.
+so development in your favourite IDE is still possible. Go to 
+'/vagrant' in order to find all development files.
