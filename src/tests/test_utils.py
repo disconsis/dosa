@@ -49,19 +49,27 @@ def test_host_has_vendor_attribute_and_is_correctly_set():
     assert utils.Host('1.2.3.4', mac='00:50:ba:00:00:00').vendor \
         == 'D-Link Corporation'
 
-# set_up and tear_down methods required for setting up docker beforehand
-# move the below into a class
 
-def test_host_resolves_correct_mac():
+def test_host_resolves_correct_mac(container):
+    container_details = container.attrs['NetworkSettings']['Networks']['bridge']
     conf.iface = 'docker0'
-    host = utils.Host('172.18.0.2')
+    host = utils.Host(container_details['IPAddress'])
     host.resolve_mac()
-    assert host.mac == netaddr.EUI('02:42:ac:12:00:02')
+    assert host.mac == netaddr.EUI(container_details['MacAddress'])
 
 
-def test_host_raises_exception_on_no_response():
+def test_host_raises_exception_on_no_response(network):
     conf.iface = 'docker0'
-    host = utils.Host('172.18.0.10')
+    net = netaddr.IPNetwork(network.attrs['IPAM']['Config'][0]['Subnet'])
+    used_hosts = {
+        container.attrs['NetworkSettings']['Networks']['bridge']['IPAddress']
+        for container in network.containers
+    }
+    used_hosts.add(network.attrs['IPAM']['Config'][0]['Gateway'])
+    unused_ip = (next(str(host) for host in net.iter_hosts()
+                      if str(host) not in used_hosts))
+
+    host = utils.Host(unused_ip)
     host.arp_timeout = 1
     host.arp_retries = 0
     with pytest.raises(utils.AddressNotResolvedError) as e:
