@@ -1,8 +1,8 @@
 import pytest
 import docker
 
-client_name = 'dosa_docker_test_client'
-network_name = 'dosa_docker_test_network'
+test_container_name = 'dosa_docker_test_container'
+test_network_name = 'dosa_docker_test_network'
 
 
 @pytest.fixture
@@ -13,14 +13,14 @@ def network():
     try:
         network = next(
             net for net in networks
-            if net.name == network_name
+            if net.name == test_network_name
             and net.attrs.get('Internal') is True
             and net.attrs.get('Driver') == 'bridge'
             and net.attrs.get('Attachable') is True
         )
     except StopIteration:
         network = client.networks.create(
-            name=network_name,
+            name=test_network_name,
             internal=True,
             driver='bridge',
             attachable=True,
@@ -34,7 +34,7 @@ def container(network):
     client = docker.from_env()
     container = client.containers.run(
         'ubuntu', 'sleep infinity',
-        name=client_name,
+        name=test_container_name,
         remove=True,
         detach=True,
     )
