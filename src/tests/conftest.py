@@ -25,6 +25,7 @@ def network():
             driver='bridge',
             attachable=True,
         )
+    network.reload()
     return network
 
 

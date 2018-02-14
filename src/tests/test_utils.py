@@ -67,8 +67,8 @@ def test_host_raises_exception_on_no_response(network):
         for container in network.containers
     }
     used_hosts.add(network.attrs['IPAM']['Config'][0]['Gateway'])
-    unused_ip = (next(str(host) for host in net.iter_hosts()
-                      if str(host) not in used_hosts))
+    unused_ip = next(str(host) for host in net.iter_hosts()
+                     if str(host) not in used_hosts)
 
     host = utils.Host(unused_ip)
     host.arp_timeout = 1
