@@ -33,6 +33,11 @@ def network():
 def container(network):
     """return docker container to use in tests"""
     client = docker.from_env()
+    try:
+        client.images.get('ubuntu:latest')
+    except docker.errors.ImageNotFound:
+        client.images.pull('ubuntu:latest')
+
     container = client.containers.run(
         'ubuntu', 'sleep infinity',
         name=test_container_name,
