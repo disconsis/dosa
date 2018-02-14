@@ -60,17 +60,8 @@ def test_host_resolves_correct_mac(container):
 
 
 def test_host_raises_exception_on_no_response(network):
-    conf.iface = 'br-{}'.format(network.id[:12])
-    net = netaddr.IPNetwork(network.attrs['IPAM']['Config'][0]['Subnet'])
-    used_hosts = {
-        container.attrs['NetworkSettings']['Networks'][test_network_name]['IPAddress']
-        for container in network.containers
-    }
-    used_hosts.add(network.attrs['IPAM']['Config'][0]['Gateway'])
-    unused_ip = next(str(host) for host in net.iter_hosts()
-                     if str(host) not in used_hosts)
-
-    host = utils.Host(unused_ip)
+    conf.iface = 'lo'
+    host = utils.Host('93.34.12.122')
     host.arp_timeout = 1
     host.arp_retries = 0
     with pytest.raises(utils.AddressNotResolvedError) as e:
