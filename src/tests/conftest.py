@@ -35,10 +35,10 @@ def container(network):
     container = client.containers.run(
         'ubuntu', 'sleep infinity',
         name=test_container_name,
+        network=network.name,
         remove=True,
         detach=True,
     )
-    network.connect(container)
     container.reload()
 
     yield container

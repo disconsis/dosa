@@ -2,6 +2,7 @@ import utils
 import netaddr
 from scapy.config import conf
 import pytest
+from tests.conftest import test_network_name
 
 
 def test_mac_has_broadcast_addr():
@@ -51,18 +52,18 @@ def test_host_has_vendor_attribute_and_is_correctly_set():
 
 
 def test_host_resolves_correct_mac(container):
-    container_details = container.attrs['NetworkSettings']['Networks']['bridge']
-    conf.iface = 'docker0'
+    container_details = container.attrs['NetworkSettings']['Networks'][test_network_name]
+    conf.iface = 'br-{}'.format(container_details['NetworkID'][:12])
     host = utils.Host(container_details['IPAddress'])
     host.resolve_mac()
     assert host.mac == netaddr.EUI(container_details['MacAddress'])
 
 
 def test_host_raises_exception_on_no_response(network):
-    conf.iface = 'docker0'
+    conf.iface = 'br-{}'.format(network.id[:12])
     net = netaddr.IPNetwork(network.attrs['IPAM']['Config'][0]['Subnet'])
     used_hosts = {
-        container.attrs['NetworkSettings']['Networks']['bridge']['IPAddress']
+        container.attrs['NetworkSettings']['Networks'][test_network_name]['IPAddress']
         for container in network.containers
     }
     used_hosts.add(network.attrs['IPAM']['Config'][0]['Gateway'])
