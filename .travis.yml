@@ -6,4 +6,4 @@ install:
     - sudo apt install docker-ce
     - pip install -r requirements.txt
 script:
-    - sudo pytest -v
+    - sudo `which pytest` -v
