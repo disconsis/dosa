@@ -2,6 +2,8 @@ sudo: enabled
 language: python
 python:
     - 3.5
-install: pip install -r requirements.txt
+install:
+    - sudo apt install docker-ce
+    - pip install -r requirements.txt
 script:
-    - pytest
+    - sudo pytest -v
